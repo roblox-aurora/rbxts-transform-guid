@@ -29,7 +29,7 @@ function visitNode(
 	// 	);
 	// }
 
-	if (ts.isEnumDeclaration(node) && config.ambientEmitEnabled) {
+	if (ts.isEnumDeclaration(node) && config.experimentalConstEnumJSDoc) {
 		const tags = ts.getJSDocTags(node);
 		if (tags.length > 0) {
 			//console.log(tags.map((d) => d.getText()));
@@ -103,18 +103,19 @@ function visitNodeAndChildren(
 export interface GuidTransformConfiguration {
 	verbose?: boolean;
 	useConstEnum?: boolean;
-	ambientEmitEnabled: boolean;
-	ambientEmitIfEnv?: Record<string, string | boolean | string[]> | Array<string>;
+	experimentalConstEnumJSDoc: boolean;
+	emitExperimentalJSDocIfEnv?: Record<string, string | boolean | string[]> | Array<string>;
 }
 
 const DEFAULTS: GuidTransformConfiguration = {
 	useConstEnum: true,
-	ambientEmitEnabled: true,
+	experimentalConstEnumJSDoc: false,
+	emitExperimentalJSDocIfEnv: ["production"],
 };
 
 export default function transform(program: ts.Program, userConfiguration: GuidTransformConfiguration) {
 	userConfiguration = { ...DEFAULTS, ...userConfiguration };
-	const { ambientEmitIfEnv } = userConfiguration;
+	const { emitExperimentalJSDocIfEnv: ambientEmitIfEnv } = userConfiguration;
 
 	if (userConfiguration.verbose) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -123,7 +124,7 @@ export default function transform(program: ts.Program, userConfiguration: GuidTr
 
 	if (ambientEmitIfEnv) {
 		if (Array.isArray(ambientEmitIfEnv)) {
-			const envVar = (process.env["NODE_ENV"] ?? "production").trim();
+			const envVar = (process.env["NODE_ENV"] ?? "").trim();
 			let enableAmbient = false;
 
 			if (userConfiguration.verbose) {
@@ -136,7 +137,7 @@ export default function transform(program: ts.Program, userConfiguration: GuidTr
 				}
 			}
 
-			userConfiguration.ambientEmitEnabled = enableAmbient;
+			userConfiguration.experimentalConstEnumJSDoc = enableAmbient;
 		} else {
 			for (const [k, v] of Object.entries(ambientEmitIfEnv)) {
 				const envVar = process.env[k];
@@ -151,7 +152,7 @@ export default function transform(program: ts.Program, userConfiguration: GuidTr
 						(typeof v === "string" && envVar !== v) ||
 						(Array.isArray(v) && v.includes(envVar)))
 				) {
-					userConfiguration.ambientEmitEnabled = false;
+					userConfiguration.experimentalConstEnumJSDoc = false;
 				}
 			}
 		}
