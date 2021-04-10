@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import ts, { factory } from "typescript";
-import { formatTransformerDebug } from "./shared";
+import { formatTransformerDebug, formatTransformerWarning } from "./shared";
 import { visitCallExpression } from "./visitCallExpression";
 import { isModuleImportExpression } from "./isModuleImportExpression";
 import visitVariableStatement from "./visitVariableDeclaration";
@@ -29,25 +29,36 @@ function visitNode(
 	// 	);
 	// }
 
-	if (ts.isEnumDeclaration(node)) {
+	if (ts.isEnumDeclaration(node) && config.ambientEmitEnabled) {
 		const tags = ts.getJSDocTags(node);
-		if (node.modifiers && node.modifiers?.findIndex((f) => f.kind === ts.SyntaxKind.ConstKeyword) !== -1) {
+		if (tags.length > 0) {
 			//console.log(tags.map((d) => d.getText()));
 			for (const tag of tags) {
 				if (tag.tagName.text === "uuid") {
-					return factory.updateEnumDeclaration(
-						node,
-						undefined,
-						node.modifiers,
-						node.name,
-						node.members.map((m) => {
-							return factory.updateEnumMember(
-								m,
-								m.name,
-								factory.createStringLiteral(getGuidForLabel(m.name.getText())),
-							);
-						}),
-					);
+					if (
+						node.modifiers &&
+						node.modifiers.findIndex((f) => f.kind === ts.SyntaxKind.ConstKeyword) !== -1
+					) {
+						const labelId = `${node.getSourceFile().fileName}:const-enum@${node.name.text}`;
+						if (config.verbose) {
+							console.log(formatTransformerDebug("Transform node enum values", node));
+						}
+						return factory.updateEnumDeclaration(
+							node,
+							undefined,
+							node.modifiers,
+							node.name,
+							node.members.map((m) => {
+								return factory.updateEnumMember(
+									m,
+									m.name,
+									factory.createStringLiteral(getGuidForLabel(`${labelId}:${m.name.getText()}`)),
+								);
+							}),
+						);
+					} else {
+						console.log(formatTransformerWarning("Found '@uuid' on node, but not ambient enum", node));
+					}
 				}
 			}
 		}
@@ -92,18 +103,58 @@ function visitNodeAndChildren(
 export interface GuidTransformConfiguration {
 	verbose?: boolean;
 	useConstEnum?: boolean;
+	ambientEmitEnabled: boolean;
+	ambientEmitIfEnv?: Record<string, string | boolean | string[]> | Array<string>;
 }
 
 const DEFAULTS: GuidTransformConfiguration = {
 	useConstEnum: true,
+	ambientEmitEnabled: true,
 };
 
 export default function transform(program: ts.Program, userConfiguration: GuidTransformConfiguration) {
 	userConfiguration = { ...DEFAULTS, ...userConfiguration };
+	const { ambientEmitIfEnv } = userConfiguration;
 
 	if (userConfiguration.verbose) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		console.log(formatTransformerDebug("Running version " + require("../package.json").version));
+	}
+
+	if (ambientEmitIfEnv) {
+		if (Array.isArray(ambientEmitIfEnv)) {
+			const envVar = (process.env["NODE_ENV"] ?? "production").trim();
+			let enableAmbient = false;
+
+			if (userConfiguration.verbose) {
+				console.log(formatTransformerDebug("Check environment variable NODE_ENV against " + envVar));
+			}
+
+			for (const v of ambientEmitIfEnv) {
+				if (v === envVar) {
+					enableAmbient = true;
+				}
+			}
+
+			userConfiguration.ambientEmitEnabled = enableAmbient;
+		} else {
+			for (const [k, v] of Object.entries(ambientEmitIfEnv)) {
+				const envVar = process.env[k];
+				if (userConfiguration.verbose) {
+					console.log(
+						formatTransformerDebug("Check environment variable " + k + " against " + envVar?.toString()),
+					);
+				}
+				if (
+					envVar &&
+					((typeof v === "boolean" && envVar === undefined) ||
+						(typeof v === "string" && envVar !== v) ||
+						(Array.isArray(v) && v.includes(envVar)))
+				) {
+					userConfiguration.ambientEmitEnabled = false;
+				}
+			}
+		}
 	}
 
 	return (context: ts.TransformationContext) => (file: ts.SourceFile) =>
