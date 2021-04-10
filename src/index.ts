@@ -4,7 +4,7 @@ import { formatTransformerDebug, formatTransformerWarning } from "./shared";
 import { visitCallExpression } from "./visitCallExpression";
 import { isModuleImportExpression } from "./isModuleImportExpression";
 import visitVariableStatement from "./visitVariableDeclaration";
-import { getGuidForLabel } from "./registry";
+import { getGuidForLabel, hasGuidForLabel, updateGuidForLabel } from "./registry";
 
 function visitNode(node: ts.SourceFile, program: ts.Program, config: GuidTransformConfiguration): ts.SourceFile;
 function visitNode(node: ts.Node, program: ts.Program, config: GuidTransformConfiguration): ts.Node | undefined;
@@ -29,7 +29,7 @@ function visitNode(
 	// 	);
 	// }
 
-	if (ts.isEnumDeclaration(node) && config.experimentalConstEnumJSDoc) {
+	if (ts.isEnumDeclaration(node) && config.EXPERIMENTAL_JSDocConstEnumUUID) {
 		const tags = ts.getJSDocTags(node);
 		if (tags.length > 0) {
 			//console.log(tags.map((d) => d.getText()));
@@ -40,6 +40,22 @@ function visitNode(
 						node.modifiers.findIndex((f) => f.kind === ts.SyntaxKind.ConstKeyword) !== -1
 					) {
 						const labelId = `${node.getSourceFile().fileName}:const-enum@${node.name.text}`;
+						// Check for our label
+						if (hasGuidForLabel(labelId)) {
+							if (config.ConstEnumForceIfWatch) {
+								updateGuidForLabel(labelId);
+							} else {
+								console.log(
+									formatTransformerWarning(
+										`Detected existing UUID for node ${labelId}, disabled UUID generation. To force, use 'ConstEnumForceIfWatch'`,
+									),
+								);
+								continue;
+							}
+						} else {
+							getGuidForLabel(labelId);
+						}
+
 						if (config.verbose) {
 							console.log(formatTransformerDebug("Transform node enum values", node));
 						}
@@ -52,7 +68,7 @@ function visitNode(
 								return factory.updateEnumMember(
 									m,
 									m.name,
-									factory.createStringLiteral(getGuidForLabel(`${labelId}:${m.name.getText()}`)),
+									factory.createStringLiteral(updateGuidForLabel(`${labelId}:${m.name.getText()}`)),
 								);
 							}),
 						);
@@ -103,19 +119,20 @@ function visitNodeAndChildren(
 export interface GuidTransformConfiguration {
 	verbose?: boolean;
 	useConstEnum?: boolean;
-	experimentalConstEnumJSDoc: boolean;
-	emitExperimentalJSDocIfEnv?: Record<string, string | boolean | string[]> | Array<string>;
+	EXPERIMENTAL_JSDocConstEnumUUID: boolean;
+	ConstEnumUUIDRequiresEnv?: Record<string, string | boolean | string[]> | Array<string>;
+	ConstEnumForceIfWatch?: boolean;
 }
 
 const DEFAULTS: GuidTransformConfiguration = {
 	useConstEnum: true,
-	experimentalConstEnumJSDoc: false,
-	emitExperimentalJSDocIfEnv: ["production"],
+	EXPERIMENTAL_JSDocConstEnumUUID: false,
+	ConstEnumUUIDRequiresEnv: ["production"],
 };
 
 export default function transform(program: ts.Program, userConfiguration: GuidTransformConfiguration) {
 	userConfiguration = { ...DEFAULTS, ...userConfiguration };
-	const { emitExperimentalJSDocIfEnv: ambientEmitIfEnv } = userConfiguration;
+	const { ConstEnumUUIDRequiresEnv: ambientEmitIfEnv } = userConfiguration;
 
 	if (userConfiguration.verbose) {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -137,7 +154,7 @@ export default function transform(program: ts.Program, userConfiguration: GuidTr
 				}
 			}
 
-			userConfiguration.experimentalConstEnumJSDoc = enableAmbient;
+			userConfiguration.EXPERIMENTAL_JSDocConstEnumUUID = enableAmbient;
 		} else {
 			for (const [k, v] of Object.entries(ambientEmitIfEnv)) {
 				const envVar = process.env[k];
@@ -152,7 +169,7 @@ export default function transform(program: ts.Program, userConfiguration: GuidTr
 						(typeof v === "string" && envVar !== v) ||
 						(Array.isArray(v) && v.includes(envVar)))
 				) {
-					userConfiguration.experimentalConstEnumJSDoc = false;
+					userConfiguration.EXPERIMENTAL_JSDocConstEnumUUID = false;
 				}
 			}
 		}

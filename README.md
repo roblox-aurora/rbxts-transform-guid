@@ -5,7 +5,7 @@ Very experimental compile-time GUID library
 
 ## Ambient Enum UUIDs
 
-option `experimentalConstEnumJSDoc`. If this is use, it must only be used in contexts where a file watcher isn't used such as production. Environments can be set with `emitExperimentalJSDocIfEnv`.
+option `EXPERIMENTAL_JSDocConstEnumUUID`. If this is use, it must only be used in contexts where a file watcher isn't used such as production. Environments can be set with `ConstEnumUUIDRequiresEnv`.
 
 ```ts
 /**
