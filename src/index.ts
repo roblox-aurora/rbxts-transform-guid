@@ -13,21 +13,30 @@ function visitNode(
 	program: ts.Program,
 	config: GuidTransformConfiguration,
 ): ts.Node | ts.Node[] | undefined {
-	// if (isModuleImportExpression(node, program)) {
-	// 	const { importClause } = node;
+	if (isModuleImportExpression(node, program)) {
+		const { importClause } = node;
 
-	// 	if (importClause !== undefined && importClause.isTypeOnly) {
-	// 		return node;
-	// 	}
+		if (importClause !== undefined && importClause.isTypeOnly) {
+			return node;
+		}
 
-	// 	return factory.createExportDeclaration(
-	// 		undefined,
-	// 		undefined,
-	// 		false,
-	// 		ts.factory.createNamedExports([]),
-	// 		undefined,
-	// 	);
-	// }
+		return factory.createExportDeclaration(
+			undefined,
+			undefined,
+			false,
+			ts.factory.createNamedExports([]),
+			undefined,
+		);
+	}
+
+	if (ts.isStringLiteral(node)) {
+		if (node.text.startsWith("UUID@")) {
+			const uuid = node.text.substr(5);
+			console.log(uuid);
+			const label = getGuidForLabel(uuid);
+			return factory.createStringLiteral(label);
+		}
+	}
 
 	if (ts.isEnumDeclaration(node) && config.EXPERIMENTAL_JSDocConstEnumUUID) {
 		const tags = ts.getJSDocTags(node);
@@ -80,13 +89,13 @@ function visitNode(
 		}
 	}
 
-	// if (ts.isVariableStatement(node)) {
-	// 	return visitVariableStatement(node, program, config);
-	// }
+	if (ts.isVariableStatement(node)) {
+		return visitVariableStatement(node, program, config);
+	}
 
-	// if (ts.isCallExpression(node)) {
-	// 	return visitCallExpression(node, program, config);
-	// }
+	if (ts.isCallExpression(node)) {
+		return visitCallExpression(node, program, config);
+	}
 
 	return node;
 }
@@ -125,7 +134,7 @@ export interface GuidTransformConfiguration {
 }
 
 const DEFAULTS: GuidTransformConfiguration = {
-	useConstEnum: true,
+	useConstEnum: false,
 	EXPERIMENTAL_JSDocConstEnumUUID: false,
 	ConstEnumUUIDRequiresEnv: ["production"],
 };

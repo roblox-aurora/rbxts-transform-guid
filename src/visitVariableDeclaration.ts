@@ -13,20 +13,15 @@ export function transformAssignmentToEnum(
 	useConstEnum: boolean,
 ) {
 	const props = new Array<ts.EnumMember>();
-	console.log(values.kind);
 	for (const prop of values.properties) {
 		// if (ts.isStringLiteral(prop)) {
 		if (prop.name !== undefined) {
-			console.log(prop.name);
 			props.push(
 				factory.createEnumMember(
 					prop.name,
 					factory.createStringLiteral(getGuidForLabel(`${namespace}:${prop.name.getText()}`)),
 				),
 			);
-			// }
-		} else {
-			console.log(prop.kind);
 		}
 	}
 
@@ -57,9 +52,6 @@ export default function visitVariableStatement(
 				switch (moduleCallName) {
 					case MacroFunctionName.guids:
 						const [namespace, values] = initializer.arguments;
-						if (config.verbose) {
-							console.log(formatTransformerDebug("Transform"));
-						}
 
 						if (!ts.isStringLiteral(namespace)) {
 							throw ``;

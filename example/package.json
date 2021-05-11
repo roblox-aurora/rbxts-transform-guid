@@ -1,0 +1,22 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "set NODE_ENV=development && rbxtsc",
+    "dev": "set NODE_ENV=development && rbxtsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rbxts/compiler-types": "^1.0.0-beta.16.1",
+    "@rbxts/types": "^1.0.459",
+    "rbxts-transform-guid": "file:.."
+  },
+  "dependencies": {
+    "@rbxts/net": "^2.1.0-beta.0"
+  }
+}
