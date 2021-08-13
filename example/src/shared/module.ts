@@ -11,4 +11,4 @@ export const enum Test {
 }
 
 const uuids = $debugUUIDs<Test>();
-print(uuids[Test.Hi])
+print(uuids[Test.Hi], uuids.test)
