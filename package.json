@@ -3,7 +3,9 @@
   "version": "2.0.0",
   "description": "",
   "main": "out/index.js",
-  "scripts": {},
+  "scripts": {
+    "prepare": "tsc"
+  },
   "keywords": [],
   "author": "Vorlias",
   "license": "MOT",
