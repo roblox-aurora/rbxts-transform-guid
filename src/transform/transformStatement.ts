@@ -10,6 +10,7 @@ export function transformShortcutIfLiterals(
   node: ts.Statement
 ): ts.Statement {
   if (
+    state.config.generateEnumUUIDs &&
     ts.isEnumDeclaration(node) &&
     node.modifiers?.find((f) => f.kind === ts.SyntaxKind.ConstKeyword)
   ) {

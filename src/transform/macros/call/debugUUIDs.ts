@@ -22,6 +22,8 @@ export const DebugUUIDsMacro: CallMacro = {
         if (typeSymbol && typeSymbol.declarations) {
           const [declaration] = typeSymbol.declarations;
           if (ts.isEnumDeclaration(declaration)) {
+            const enabled = state.config.generateEnumUUIDs;
+
             state.logger.infoIfVerbose(
               `Create reverse lookup table for ${chalk.red(
                 declaration.name.text
@@ -56,7 +58,7 @@ export const DebugUUIDsMacro: CallMacro = {
                     ts.isStringLiteral(member.initializer)
                   ) {
                     return factory.createPropertyAssignment(
-                      factory.createStringLiteral(id),
+                      enabled ? factory.createStringLiteral(id) : member.initializer,
                       factory.createStringLiteral(member.name.getText())
                     );
                   } else {

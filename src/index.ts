@@ -8,11 +8,16 @@ import { LoggerProvider } from "./class/logProvider";
 
 const DEFAULTS: TransformConfiguration = {
 	verbose: false,
-	generationType: "hashid",
+	generateEnumUUIDs: true,
+	generationType: "hashids",
+	environments: ["production"],
 };
 
 export default function transform(program: ts.Program, userConfiguration: TransformConfiguration) {
+	const currentEnvironment = process.env.NODE_ENV ?? "production";
+
 	userConfiguration = { ...DEFAULTS, ...userConfiguration };
+	userConfiguration.generateEnumUUIDs = userConfiguration.generateEnumUUIDs && userConfiguration.environments.includes(currentEnvironment);
 
 	if (process.argv.includes("--verbose")) {
 		userConfiguration.verbose = true;
@@ -23,9 +28,17 @@ export default function transform(program: ts.Program, userConfiguration: Transf
 	if (logger.verbose) {
 		logger.write("\n");
 	}
-	logger.infoIfVerbose("Loaded guid transformer");
+	
 	return (context: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
+		
 		const state = new TransformState(program, context, userConfiguration, logger);
+
+		if (!userConfiguration.generateEnumUUIDs && !state.symbolProvider.moduleFile) {
+			logger.warnIfVerbose("Skipped GUID transformer");
+			return file => file;
+		} else {
+			logger.infoIfVerbose("Loaded GUID transformer");
+		}
 
 		return (file: ts.SourceFile) => {
 			let printFile = false;

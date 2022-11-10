@@ -56,3 +56,13 @@ local uuids = {
 	["0Ysr4LNVO9x"] = "RemoteName2",
 }
 ```
+
+## Configuration
+### `verbose: boolean`
+Whether or not the transformer's output is verbose, this can also be toggled using `--verbose` to rbxtsc.
+### `generateEnumUUIDs: boolean`
+Whether or not to generate the UUIDs on compile - will default to true, overridden by `environments`.
+### `environments: string[]`
+The environments this transformer will run the generators on - defaults to `production`.
+### `generationType: UUIDGenerationType`
+The type of strings to generate per UUID use - This can be `hashids`, `uuidv4` or `string`.

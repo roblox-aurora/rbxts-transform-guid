@@ -12,7 +12,9 @@ export type UUIDGenerationType = "guidv4" | "string" | "hashids";
 
 export interface TransformConfiguration {
 	verbose?: boolean;
+	generateEnumUUIDs: boolean;
 	generationType: UUIDGenerationType;
+	environments: string[];
 }
 
 export class TransformState {

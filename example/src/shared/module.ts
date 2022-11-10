@@ -9,14 +9,24 @@ export const enum Test {
   RemoteName2 = "AnotherThingGoesHere",
 }
 
-const uuids = $debugUUIDs<typeof Test>();
-// type infer = {[P in keyof typeof Test]: string};
+/**
+ * @uuid guidv4
+ */
+export const enum GUIDs {
+  GUID_A = "test",
+  GUID_B = "test2",
+}
 
-// const testing = uuids.SomethingGoesHereLol;
-uuids.test
+/**
+ * @uuid string
+ */
+export const enum RandomStrings {
+  RANDOM_A = "A",
+  RANDOM_B = "B",
+}
 
-// print(uuids[Test.Hi], uuids.test)
-
+const guids = [GUIDs.GUID_A, GUIDs.GUID_B, RandomStrings.RANDOM_A, RandomStrings.RANDOM_B];
 
 const test = Test.RemoteName1;
+const uuids = $debugUUIDs<typeof Test>();
 const uuid = uuids[Test.RemoteName1];
