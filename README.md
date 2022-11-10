@@ -1,19 +1,58 @@
 GUID
 =====
-Very experimental compile-time GUID library
+Compile-time GUID generation library. This can be used for networking remote purposes, or for general compile-time hash requirements.
 
-
-## Ambient Enum UUIDs
-
-option `EXPERIMENTAL_JSDocConstEnumUUID`. If this is use, it must only be used in contexts where a file watcher isn't used such as production. Environments can be set with `ConstEnumUUIDRequiresEnv`.
+## Usage
+This transformer makes use of the `uuid` jsdoc tag. By default it will use `hashids` for the generated strings. 
 
 ```ts
 /**
  * @uuid
  */
-const enum AmbientId {
-    Test = "Hello, World"
+export const enum UUID {
+    A = "Test",
+    B = "Test2",
+    C = "Test3"
 }
 ```
 
-All it requires is a `const enum` and a `@uuid` jsdoc tag. This should only be used in production environments, and without watch mode. If used in watch mode this may be quite buggy and cause issues.
+So now
+```ts
+/**
+ * @uuid
+ */
+export const enum UUID {
+    A = "Test",
+    B = "Test2",
+    C = "Test3"
+}
+
+const test = UUID.A;
+```
+which will compile to
+```lua
+local test = "TDr8PURNna"
+```
+
+## Macros
+### `debugUUIDs` `<T>`
+Will reverse hashed enums, e.g.
+
+```ts
+/**
+ * @uuid
+ */
+export const enum Test {
+  RemoteName1 = "SomethingGoesHereLol",
+  RemoteName2 = "AnotherThingGoesHere",
+}
+
+const uuids = $debugUUIDs<typeof Test>(); // NOTE: MUST BE `typeof EnumNameHere`.
+```
+
+```lua
+local uuids = {
+	["9QiYxp4Qy60"] = "RemoteName1",
+	["0Ysr4LNVO9x"] = "RemoteName2",
+}
+```

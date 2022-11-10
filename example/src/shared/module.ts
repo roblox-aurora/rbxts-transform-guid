@@ -2,7 +2,7 @@
 import { $debugUUIDs } from "rbxts-transform-guid";
 
 /**
- * @uuid hashids
+ * @uuid guidv4
  */
 export const enum Test {
   RemoteName1 = "SomethingGoesHereLol",
@@ -12,9 +12,11 @@ export const enum Test {
 const uuids = $debugUUIDs<typeof Test>();
 // type infer = {[P in keyof typeof Test]: string};
 
-const testing = uuids.SomethingGoesHereLol;
+// const testing = uuids.SomethingGoesHereLol;
+uuids.test
 
 // print(uuids[Test.Hi], uuids.test)
 
 
-uuids[Test.RemoteName1];
+const test = Test.RemoteName1;
+const uuid = uuids[Test.RemoteName1];

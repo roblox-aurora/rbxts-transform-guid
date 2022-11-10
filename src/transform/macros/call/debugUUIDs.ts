@@ -25,6 +25,11 @@ export const DebugUUIDsMacro: CallMacro = {
             state.logger.infoIfVerbose(
               `Create reverse lookup table for ${chalk.red(
                 declaration.name.text
+              )}@${chalk.green(
+                path.relative(
+                  state.baseDir,
+                  declaration.getSourceFile().fileName
+                )
               )} in ${chalk.green(
                 path.relative(state.baseDir, node.getSourceFile().fileName)
               )}:${chalk.yellow(
@@ -33,58 +38,17 @@ export const DebugUUIDsMacro: CallMacro = {
             );
 
             const members = declaration.members;
-            const interfaceType = factory.createUniqueName(
-              declaration.name.text
-            );
 
             const parentLabel = `${
               declaration.getSourceFile().fileName
             }:const-enum@${declaration.name.text}`;
-
-            state.prereq(
-              factory.createInterfaceDeclaration(
-                undefined,
-                interfaceType,
-                undefined,
-                undefined,
-                members.map((member) => {
-                  const id = state.guidProvider.getStringForConstLabel(
-                    `${parentLabel}:${member.name.getText()}`,
-                    state.config.generationType
-                  );
-
-                  if (
-                    member.initializer &&
-                    ts.isStringLiteral(member.initializer)
-                  ) {
-                    return factory.createPropertySignature(
-                      undefined,
-                      factory.createStringLiteral(member.initializer.text),
-                      undefined,
-                      factory.createLiteralTypeNode(
-                        factory.createStringLiteral(id)
-                      )
-                    );
-                  } else {
-                    return factory.createPropertySignature(
-                      undefined,
-                      member.name,
-                      undefined,
-                      factory.createKeywordTypeNode(
-                        ts.SyntaxKind.UnknownKeyword
-                      )
-                    );
-                  }
-                })
-              )
-            );
 
             return factory.createAsExpression(
               factory.createObjectLiteralExpression(
                 members.map((member) => {
                   const id = state.guidProvider.getStringForConstLabel(
                     `${parentLabel}:${member.name.getText()}`,
-                    state.config.generationType
+                    state.guidProvider.getGenerationTypeForEnum(declaration, state.config.generationType)!,
                   );
 
                   if (
@@ -92,8 +56,8 @@ export const DebugUUIDsMacro: CallMacro = {
                     ts.isStringLiteral(member.initializer)
                   ) {
                     return factory.createPropertyAssignment(
-                      member.initializer.text,
-                      factory.createStringLiteral(id)
+                      factory.createStringLiteral(id),
+                      factory.createStringLiteral(member.name.getText())
                     );
                   } else {
                     return factory.createPropertyAssignment(
@@ -103,7 +67,18 @@ export const DebugUUIDsMacro: CallMacro = {
                   }
                 })
               ),
-              factory.createTypeReferenceNode(interfaceType)
+              factory.createTypeReferenceNode(
+                factory.createIdentifier("Record"),
+                [
+                  factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+                  factory.createUnionTypeNode([
+                    factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+                    factory.createKeywordTypeNode(
+                      ts.SyntaxKind.UndefinedKeyword
+                    ),
+                  ]),
+                ]
+              )
             );
           }
         }

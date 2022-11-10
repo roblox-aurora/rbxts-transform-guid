@@ -6,5 +6,5 @@ type $ConstGuids<K extends string, T> = {
  * Creates a debug object for UUIDs, for returning the original value of the UUID generated enum.
  */
 export function $debugUUIDs<_TConstEnum>(): {
-  [P in keyof _TConstEnum as _TConstEnum[P]]: _TConstEnum[P];
+  [P in keyof _TConstEnum as string]: P | undefined;
 };

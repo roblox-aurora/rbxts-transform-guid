@@ -1,8 +1,10 @@
 import { v4 } from "uuid";
 import Hashids from "hashids";
 import { TransformState, UUIDGenerationType } from "./transformState";
+import ts from "typescript";
+import chalk from "chalk";
 
-const hashids = new Hashids()
+const hashids = new Hashids();
 
 function getRndInteger(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -38,6 +40,25 @@ export class GUIDProvider {
     return this.labels.has(label);
   }
 
+  public getGenerationTypeForEnum(
+    enumerable: ts.EnumDeclaration,
+    elseGenerationType: UUIDGenerationType
+  ): UUIDGenerationType | undefined {
+    const docTags = ts.getJSDocTags(enumerable);
+    for (const tag of docTags) {
+      if (tag.tagName.text === "uuid") {
+        if (
+          typeof tag.comment === "string" &&
+          ["hashid", "guidv4", "string"].includes(tag.comment)
+        ) {
+          return tag.comment as UUIDGenerationType;
+        }
+
+        return elseGenerationType;
+      }
+    }
+  }
+
   public getStringForConstLabel(
     label: string,
     labelKind: UUIDGenerationType
@@ -48,14 +69,25 @@ export class GUIDProvider {
       if (labelKind === "guidv4") {
         const uuid = v4();
         this.labels.set(label, uuid);
+        this.transformState.logger.infoIfVerbose(
+          `Generate ${chalk.yellow("GUIDv4")} ${chalk.cyan(uuid)} for ${chalk.magenta(label)}`
+        );
         return uuid;
       } else if (labelKind === "string") {
         const uuid = generateGuid();
         this.labels.set(label, uuid);
+
+        this.transformState.logger.infoIfVerbose(
+          `Generate ${chalk.yellow("string")} ${chalk.green(`"${uuid}"`)} for ${chalk.magenta(label)}`
+        );
         return uuid;
       } else if (labelKind === "hashid") {
         const uuid = hashids.encode(this.labels.size, new Date().getTime());
         this.labels.set(label, uuid);
+
+        this.transformState.logger.infoIfVerbose(
+          `Generate ${chalk.yellow("hashid")} ${chalk.green(`"${uuid}"`)} for ${chalk.magenta(label)}`
+        );
         return uuid;
       } else {
         throw `Unsupported`;

@@ -17,52 +17,38 @@ export function transformShortcutIfLiterals(
 
     const docTags = ts.getJSDocTags(node);
 
-    for (const tag of docTags) {
-      if (tag.tagName.text === "uuid") {
-        let generationType = state.config.generationType;
-        if (
-          typeof tag.comment === "string" &&
-          ["string", "guidv4", "hashid"].includes(tag.comment)
-        ) {
-          generationType = tag.comment as UUIDGenerationType;
-        }
+    const generationType = guidProvider.getGenerationTypeForEnum(node, state.config.generationType);
+    if (generationType) {
+      state.logger.infoIfVerbose(
+        `Transforming detected UUID enumerable object ${chalk.green(
+          path.relative(state.options.baseUrl!, node.getSourceFile().fileName)
+        )}: ${chalk.yellow(node.name.text)}`
+      );
 
-        state.logger.infoIfVerbose(
-          `Transforming detected UUID enumerable object ${chalk.green(
-            path.relative(state.options.baseUrl!, node.getSourceFile().fileName)
-          )}: ${chalk.yellow(node.name.text)}`
-        );
+      const parentLabel = `${node.getSourceFile().fileName}:const-enum@${
+        node.name.text
+      }`;
 
-        const labelId = `${node.getSourceFile().fileName}:const-enum@${
-          node.name.text
-        }`;
-
-        if (!guidProvider.hasStringForConstLabel(labelId)) {
-          const parentLabel = guidProvider.getStringForConstLabel(
-            labelId,
-            generationType
+      return factory.updateEnumDeclaration(
+        node,
+        undefined,
+        node.modifiers,
+        node.name,
+        node.members.map((m) => {
+          return factory.updateEnumMember(
+            m,
+            m.name,
+            factory.createStringLiteral(
+              guidProvider.getStringForConstLabel(
+                `${parentLabel}:${m.name.getText()}`,
+                generationType
+              )
+            )
           );
-
-          return factory.updateEnumDeclaration(
-            node,
-            undefined,
-            node.modifiers,
-            node.name,
-            node.members.map((m) => {
-              return factory.updateEnumMember(
-                m,
-                m.name,
-                factory.createStringLiteral(
-                  guidProvider.getStringForConstLabel(
-                    `${parentLabel}:${m.name.getText()}`,
-                    generationType
-                  )
-                )
-              );
-            })
-          );
-        }
-      }
+        })
+      );
+    } else {
+      state.logger.warn(`Could not find generation type for ${node.getText()}`);
     }
   }
 
