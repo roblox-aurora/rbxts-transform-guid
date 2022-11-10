@@ -48,8 +48,6 @@ export function transformShortcutIfLiterals(
           );
         })
       );
-    } else {
-      state.logger.warn(`Could not find generation type for ${node.getText()}`);
     }
   }
 
