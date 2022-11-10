@@ -2,7 +2,7 @@
 import { $debugUUIDs } from "rbxts-transform-guid";
 
 /**
- * @uuid guidv4
+ * @uuid hashids
  */
 export const enum Test {
   RemoteName1 = "SomethingGoesHereLol",

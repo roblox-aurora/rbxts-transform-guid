@@ -49,7 +49,7 @@ export class GUIDProvider {
       if (tag.tagName.text === "uuid") {
         if (
           typeof tag.comment === "string" &&
-          ["hashid", "guidv4", "string"].includes(tag.comment)
+          ["hashids", "guidv4", "string"].includes(tag.comment)
         ) {
           return tag.comment as UUIDGenerationType;
         }
@@ -81,7 +81,7 @@ export class GUIDProvider {
           `Generate ${chalk.yellow("string")} ${chalk.green(`"${uuid}"`)} for ${chalk.magenta(label)}`
         );
         return uuid;
-      } else if (labelKind === "hashid") {
+      } else if (labelKind === "hashids") {
         const uuid = hashids.encode(this.labels.size, new Date().getTime());
         this.labels.set(label, uuid);
 

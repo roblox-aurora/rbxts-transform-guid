@@ -8,7 +8,7 @@ import { GUIDProvider } from "./guidProvider";
 import { LoggerProvider } from "./logProvider";
 import { SymbolProvider } from "./symbolProvider";
 
-export type UUIDGenerationType = "guidv4" | "string" | "hashid";
+export type UUIDGenerationType = "guidv4" | "string" | "hashids";
 
 export interface TransformConfiguration {
 	verbose?: boolean;
