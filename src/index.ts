@@ -9,7 +9,7 @@ import { LoggerProvider } from "./class/logProvider";
 const DEFAULTS: TransformConfiguration = {
 	verbose: false,
 	generateEnumUUIDs: true,
-	generationType: "hashids",
+	generationType: "guidv4",
 	environments: ["production"],
 };
 
