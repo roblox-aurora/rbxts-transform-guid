@@ -28,12 +28,17 @@ export default function transform(program: ts.Program, userConfiguration: Transf
 	if (logger.verbose) {
 		logger.write("\n");
 	}
+
+	if (userConfiguration.environments) {
+		if (!userConfiguration.environments.includes(currentEnvironment)) {
+			userConfiguration.generateEnumUUIDs = false;
+		}
+	}
 	
 	return (context: ts.TransformationContext): ((file: ts.SourceFile) => ts.Node) => {
-		
 		const state = new TransformState(program, context, userConfiguration, logger);
 
-		if (!userConfiguration.generateEnumUUIDs && !state.symbolProvider.moduleFile) {
+		if (!state.symbolProvider.moduleFile) {
 			logger.warnIfVerbose("Skipped GUID transformer");
 			return file => file;
 		} else {
