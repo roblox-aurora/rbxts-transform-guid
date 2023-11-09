@@ -32,7 +32,6 @@ export function transformShortcutIfLiterals(
 
       return factory.updateEnumDeclaration(
         node,
-        undefined,
         node.modifiers,
         node.name,
         node.members.map((m) => {
