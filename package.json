@@ -1,6 +1,6 @@
 {
   "name": "rbxts-transform-guid",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "",
   "main": "out/index.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "dotenv": "^16.0.3",
     "hashids": "^2.2.10",
     "ts-expose-internals": "5.2.2",
-    "typescript": "^5.2.2",
+    "typescript": "^5.9.3",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
